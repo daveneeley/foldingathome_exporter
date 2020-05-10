@@ -277,16 +277,18 @@ func (e *Exporter) parseQueueInfo(ch chan<- prometheus.Metric, slotInfo []fahapi
 		id := slotMap[qInfo.Slot].ID
 		desc := slotMap[qInfo.Slot].Description
 		prcg := fmt.Sprintf("%d (%d, %d, %d)", qInfo.Project, qInfo.Run, qInfo.Clone, qInfo.Gen)
+		state := strings.ToLower(qInfo.State)
 
-		if strings.ToLower(qInfo.State) == "download" {
+		if state == "download" {
 			ch <- prometheus.MustNewConstMetric(e.slotAttempts, prometheus.GaugeValue, float64(qInfo.Attempts), id, desc)
 			ch <- prometheus.MustNewConstMetric(e.slotNextAttempt, prometheus.GaugeValue, qInfo.NextAttempt.Seconds(), id, desc)
 		}
 
-		// TODO: how to ensure there are only one of these? average them? take the "latest"?
-		ch <- prometheus.MustNewConstMetric(e.slotEstimatedPointsPerDay, prometheus.GaugeValue, float64(qInfo.PPD), id, desc)
+		if state == "running" || state == "finishing" {
+			ch <- prometheus.MustNewConstMetric(e.slotEstimatedPointsPerDay, prometheus.GaugeValue, float64(qInfo.PPD), id, desc)
+		}
 
-                percentDone, err := strconv.ParseFloat(strings.TrimSuffix(qInfo.PercentDone, "%"), 64)
+		percentDone, err := strconv.ParseFloat(strings.TrimSuffix(qInfo.PercentDone, "%"), 64)
 		if err == nil {
 			ch <- prometheus.MustNewConstMetric(e.workUnitStepsCompletedPercent, prometheus.GaugeValue, percentDone, id, desc, prcg)
 		}
