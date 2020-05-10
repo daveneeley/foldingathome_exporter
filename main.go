@@ -27,7 +27,8 @@ const (
 )
 
 type Exporter struct {
-	logger log.Logger
+	address string
+	logger  log.Logger
 
 	up                                 *prometheus.Desc
 	uptime                             *prometheus.Desc
@@ -43,9 +44,10 @@ type Exporter struct {
 	workUnitTimeRemainingSeconds       *prometheus.Desc
 }
 
-func NewExporter(logger log.Logger) *Exporter {
+func NewExporter(address string, logger log.Logger) *Exporter {
 	return &Exporter{
-		logger: logger,
+		address: address,
+		logger:  logger,
 		up: prometheus.NewDesc(
 			prometheus.BuildFQName(namespace, "", "up"),
 			"Could the FAHClient be reached.",
@@ -140,7 +142,7 @@ func (e *Exporter) Describe(ch chan<- *prometheus.Desc) {
 // Collect fetches the statistics from the configured foldingathome server, and
 // delivers them as Prometheus metrics. It implements prometheus.Collector.
 func (e *Exporter) Collect(ch chan<- prometheus.Metric) {
-	api, err := fahapi.NewAPI(fahapi.DefaultAddr)
+	api, err := fahapi.NewAPI(e.address)
 	if err != nil {
 		ch <- prometheus.MustNewConstMetric(e.up, prometheus.GaugeValue, 0)
 		level.Error(e.logger).Log("msg", "Failed to connect to FAHClient", "err", err)
@@ -305,7 +307,7 @@ func (e *Exporter) parseQueueInfo(ch chan<- prometheus.Metric, slotInfo []fahapi
 
 func main() {
 	var (
-		// TODO: accept FAHClient hostname and port
+		address       = kingpin.Flag("fahclient.address", "Folding@home client telnet API address.").Default("localhost:36330").String()
 		listenAddress = kingpin.Flag("web.listen-address", "Address to listen on for web interface and telemetry.").Default(":9737").String()
 		metricsPath   = kingpin.Flag("web.telemetry-path", "Path under which to expose metrics.").Default("/metrics").String()
 	)
@@ -318,7 +320,7 @@ func main() {
 	level.Info(logger).Log("msg", "Starting foldingathome_exporter", "version", version.Info())
 	level.Info(logger).Log("msg", "Build context", "context", version.BuildContext())
 
-	prometheus.MustRegister(NewExporter(logger))
+	prometheus.MustRegister(NewExporter(*address, logger))
 
 	http.Handle(*metricsPath, promhttp.Handler())
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
