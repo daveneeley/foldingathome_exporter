@@ -140,7 +140,7 @@ func (e *Exporter) Describe(ch chan<- *prometheus.Desc) {
 // Collect fetches the statistics from the configured foldingathome server, and
 // delivers them as Prometheus metrics. It implements prometheus.Collector.
 func (e *Exporter) Collect(ch chan<- prometheus.Metric) {
-	api, err := fahapi.NewAPI()
+	api, err := fahapi.NewAPI(fahapi.DefaultAddr)
 	if err != nil {
 		ch <- prometheus.MustNewConstMetric(e.up, prometheus.GaugeValue, 0)
 		level.Error(e.logger).Log("msg", "Failed to connect to FAHClient", "err", err)

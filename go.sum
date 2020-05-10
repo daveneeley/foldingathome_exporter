@@ -6,6 +6,8 @@ github.com/Knetic/govaluate v3.0.1-0.20171022003610-9aa49832a739+incompatible/go
 github.com/MakotoE/checkerror v0.0.0-20190804021243-5a254e7ec556/go.mod h1:R8US618vXQ4R24yePN7AuHBjfmSHYjrLuH8eluL9XEo=
 github.com/MakotoE/go-fahapi v0.0.0-20200427000432-0a0896e61b4b h1:6QYhcdXh9qQgx8u9ylKMOJpRtJ2X7xxp7Yl+amjLVC0=
 github.com/MakotoE/go-fahapi v0.0.0-20200427000432-0a0896e61b4b/go.mod h1:i7pGOhe1X1Bm8fdTZVVmBFOXFQp/7uhfobAHgBP/VjU=
+github.com/MakotoE/go-fahapi v0.0.0-20200510230949-0492cfc9e5ee h1:sR7hPK61z1qHBXR6oePiDNSHzuBbsAKF5CUxCE6cVqM=
+github.com/MakotoE/go-fahapi v0.0.0-20200510230949-0492cfc9e5ee/go.mod h1:i7pGOhe1X1Bm8fdTZVVmBFOXFQp/7uhfobAHgBP/VjU=
 github.com/Shopify/sarama v1.19.0/go.mod h1:FVkBWblsNy7DGZRfXLU0O9RCGt5g3g3yEuWXgklEdEo=
 github.com/Shopify/toxiproxy v2.1.4+incompatible/go.mod h1:OXgGpZ6Cli1/URJOF1DMxUHB2q5Ap20/P/eIdh4G0pI=
 github.com/VividCortex/gohistogram v1.0.0/go.mod h1:Pf5mBqqDxYaXu3hDrrU+w6nw50o/4+TcAqDqk/vUH7g=
