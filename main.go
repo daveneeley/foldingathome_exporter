@@ -74,7 +74,7 @@ func NewExporter(address string, logger log.Logger) *Exporter {
 		),
 		slotStatus: prometheus.NewDesc(
 			prometheus.BuildFQName(namespace, subsystemSlot, "status"),
-			"The status of the slot, encoded numerically. 0 => uknown, 1 => ready, 2 => download, 3 => running, 4 => upload, 5 => finishing, 6 => stopping, 7 => paused",
+			"The status of the slot, encoded numerically: 0 => uknown, 1 => ready, 2 => download, 3 => running, 4 => upload, 5 => finishing, 6 => stopping, 7 => paused.",
 			[]string{"id", "slot_description"},
 			nil,
 		),
@@ -177,33 +177,23 @@ func (e *Exporter) Collect(ch chan<- prometheus.Metric) {
 		up = 0
 	}
 
-	if err := e.parseUptime(ch, uptime); err != nil {
-		up = 0
-	}
+	e.parseUptime(ch, uptime)
 	if err := e.parseDate(ch, date); err != nil {
 		up = 0
 	}
 	if err := e.parseInfo(ch, info); err != nil {
 		up = 0
 	}
-	if err := e.parseSlotInfo(ch, slotInfo); err != nil {
-		up = 0
-	}
-	if err := e.parseQueueInfo(ch, slotInfo, queueInfo); err != nil {
-		up = 0
-	}
+	e.parseSlotInfo(ch, slotInfo)
+	e.parseQueueInfo(ch, slotInfo, queueInfo)
 
 	ch <- prometheus.MustNewConstMetric(e.up, prometheus.GaugeValue, up)
 }
 
-// example uptime: "14h 31m  2s\"
-func (e *Exporter) parseUptime(ch chan<- prometheus.Metric, uptime time.Duration) error {
+func (e *Exporter) parseUptime(ch chan<- prometheus.Metric, uptime time.Duration) {
 	ch <- prometheus.MustNewConstMetric(e.uptime, prometheus.GaugeValue, uptime.Seconds())
-
-	return nil
 }
 
-// example date: "2020-05-09T20:04:48Z\"
 func (e *Exporter) parseDate(ch chan<- prometheus.Metric, date string) error {
 	t, err := time.Parse(time.RFC3339, date)
 	if err != nil {
@@ -216,15 +206,6 @@ func (e *Exporter) parseDate(ch chan<- prometheus.Metric, date string) error {
 	return nil
 }
 
-// example info:
-// [
-//   [
-//     "FAHClient",
-//     ["Version", "7.6.9"],
-//     ["...", "...]
-//   ],
-//   [ ... ]
-// ]
 func (e *Exporter) parseInfo(ch chan<- prometheus.Metric, info [][]interface{}) error {
 	for _, section := range info {
 		if section[0].(string) == "FAHClient" {
@@ -244,7 +225,7 @@ func (e *Exporter) parseInfo(ch chan<- prometheus.Metric, info [][]interface{}) 
 	return err
 }
 
-func (e *Exporter) parseSlotInfo(ch chan<- prometheus.Metric, slotInfo []fahapi.SlotInfo) error {
+func (e *Exporter) parseSlotInfo(ch chan<- prometheus.Metric, slotInfo []fahapi.SlotInfo) {
 	statusMap := map[string]float64{
 		"ready":     1,
 		"download":  2,
@@ -258,11 +239,9 @@ func (e *Exporter) parseSlotInfo(ch chan<- prometheus.Metric, slotInfo []fahapi.
 	for _, info := range slotInfo {
 		ch <- prometheus.MustNewConstMetric(e.slotStatus, prometheus.GaugeValue, statusMap[strings.ToLower(info.Status)], info.ID, info.Description)
 	}
-
-	return nil
 }
 
-func (e *Exporter) parseQueueInfo(ch chan<- prometheus.Metric, slotInfo []fahapi.SlotInfo, queueInfo []fahapi.SlotQueueInfo) error {
+func (e *Exporter) parseQueueInfo(ch chan<- prometheus.Metric, slotInfo []fahapi.SlotInfo, queueInfo []fahapi.SlotQueueInfo) {
 	slotMap := map[string]fahapi.SlotInfo{}
 	for _, sInfo := range slotInfo {
 		slotMap[sInfo.ID] = sInfo
@@ -294,8 +273,6 @@ func (e *Exporter) parseQueueInfo(ch chan<- prometheus.Metric, slotInfo []fahapi
 			ch <- prometheus.MustNewConstMetric(e.workUnitTimeRemainingSeconds, prometheus.GaugeValue, qInfo.TimeRemaining.Seconds(), id, desc, prcg)
 		}
 	}
-
-	return nil
 }
 
 func main() {
