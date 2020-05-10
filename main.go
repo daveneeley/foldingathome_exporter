@@ -151,12 +151,12 @@ func (e *Exporter) Collect(ch chan<- prometheus.Metric) {
 	defer api.Close()
 
 	up := float64(1)
-	uptime, err := api.Exec("eval \"$(uptime)\\n\"")
+	uptime, err := api.Uptime()
 	if err != nil {
 		level.Error(e.logger).Log("msg", "Failed to collect uptime from FAHClient", "err", err)
 		up = 0
 	}
-	date, err := api.Exec("eval \"$(date)\\n\"")
+	date, err := api.ExecEval("date")
 	if err != nil {
 		level.Error(e.logger).Log("msg", "Failed to collect date from FAHClient", "err", err)
 		up = 0
@@ -197,22 +197,15 @@ func (e *Exporter) Collect(ch chan<- prometheus.Metric) {
 }
 
 // example uptime: "14h 31m  2s\"
-func (e *Exporter) parseUptime(ch chan<- prometheus.Metric, uptime string) error {
-	// TODO: ParseDuration doesn't handle days, but fahapi.parseFAHDuration isn't exported
-	d, err := time.ParseDuration(strings.ReplaceAll(strings.TrimSuffix(uptime, "\\"), " ", ""))
-	if err != nil {
-		level.Error(e.logger).Log("msg", "Failed to parse uptime", "err", err)
-		return err
-	}
+func (e *Exporter) parseUptime(ch chan<- prometheus.Metric, uptime time.Duration) error {
+	ch <- prometheus.MustNewConstMetric(e.uptime, prometheus.GaugeValue, uptime.Seconds())
 
-	ch <- prometheus.MustNewConstMetric(e.uptime, prometheus.GaugeValue, d.Seconds())
-
-	return err
+	return nil
 }
 
 // example date: "2020-05-09T20:04:48Z\"
 func (e *Exporter) parseDate(ch chan<- prometheus.Metric, date string) error {
-	t, err := time.Parse(time.RFC3339, strings.TrimSuffix(date, "\\"))
+	t, err := time.Parse(time.RFC3339, date)
 	if err != nil {
 		level.Error(e.logger).Log("msg", "Failed to parse date", "err", err)
 		return err
@@ -220,7 +213,7 @@ func (e *Exporter) parseDate(ch chan<- prometheus.Metric, date string) error {
 
 	ch <- prometheus.MustNewConstMetric(e.time, prometheus.GaugeValue, float64(t.Unix()))
 
-	return err
+	return nil
 }
 
 // example info:
