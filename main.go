@@ -62,7 +62,7 @@ func NewExporter(address string, logger log.Logger) *Exporter {
 		),
 		time: prometheus.NewDesc(
 			prometheus.BuildFQName(namespace, "", "time_seconds"),
-			"Current UNIX time according to the server.",
+			"Current UNIX time according to the FAHClient.",
 			nil,
 			nil,
 		),
