@@ -288,14 +288,16 @@ func (e *Exporter) parseQueueInfo(ch chan<- prometheus.Metric, slotInfo []fahapi
 			ch <- prometheus.MustNewConstMetric(e.slotEstimatedPointsPerDay, prometheus.GaugeValue, float64(qInfo.PPD), id, desc)
 		}
 
-		percentDone, err := strconv.ParseFloat(strings.TrimSuffix(qInfo.PercentDone, "%"), 64)
-		if err == nil {
-			ch <- prometheus.MustNewConstMetric(e.workUnitStepsCompletedPercent, prometheus.GaugeValue, percentDone, id, desc, prcg)
-		}
+		if !(qInfo.Project == 0 && qInfo.Run == 0 && qInfo.Clone == 0 && qInfo.Gen == 0) {
+			percentDone, err := strconv.ParseFloat(strings.TrimSuffix(qInfo.PercentDone, "%"), 64)
+			if err == nil {
+				ch <- prometheus.MustNewConstMetric(e.workUnitStepsCompletedPercent, prometheus.GaugeValue, percentDone, id, desc, prcg)
+			}
 
-		ch <- prometheus.MustNewConstMetric(e.workUnitCreditEstimatePoints, prometheus.GaugeValue, float64(qInfo.CreditEstimate), id, desc, prcg)
-		ch <- prometheus.MustNewConstMetric(e.workUnitEstimatedCompletionSeconds, prometheus.GaugeValue, qInfo.ETA.Seconds(), id, desc, prcg)
-		ch <- prometheus.MustNewConstMetric(e.workUnitTimeRemainingSeconds, prometheus.GaugeValue, qInfo.TimeRemaining.Seconds(), id, desc, prcg)
+			ch <- prometheus.MustNewConstMetric(e.workUnitCreditEstimatePoints, prometheus.GaugeValue, float64(qInfo.CreditEstimate), id, desc, prcg)
+			ch <- prometheus.MustNewConstMetric(e.workUnitEstimatedCompletionSeconds, prometheus.GaugeValue, qInfo.ETA.Seconds(), id, desc, prcg)
+			ch <- prometheus.MustNewConstMetric(e.workUnitTimeRemainingSeconds, prometheus.GaugeValue, qInfo.TimeRemaining.Seconds(), id, desc, prcg)
+		}
 	}
 
 	return nil
